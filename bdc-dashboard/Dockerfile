@@ -5,9 +5,11 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
+# Copy package files
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+
+# Install ALL dependencies (including devDependencies for build)
+RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -15,9 +17,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Next.js collects completely anonymous telemetry data about general usage.
+# Disable telemetry during build
 ENV NEXT_TELEMETRY_DISABLED 1
 
+# Build the application
 RUN npm run build
 
 # Production image, copy all the files and run next
@@ -27,24 +30,42 @@ WORKDIR /app
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
+# Create non-root user and group
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
+# Copy public assets
 COPY --from=builder /app/public ./public
 
-# Set the correct permission for prerender cache
+# Create .next directory with correct permissions
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
-# Automatically leverage output traces to reduce image size
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+# Check if standalone build exists, otherwise use standard build
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone* ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# If not using standalone, copy the full .next directory
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+
+# Ensure all files are owned by nextjs user
+RUN chown -R nextjs:nodejs /app
+
+# Switch to non-root user
 USER nextjs
 
+# Expose port
 EXPOSE 3002
 
+# Set environment variables
 ENV PORT 3002
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["node", "server.js"]
+# Start command - try standalone first, fallback to npm start
+CMD if [ -f server.js ]; then \
+      node server.js; \
+    else \
+      npm start; \
+    fi

@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         via: 'invitation' 
       },
       ipAddress: request.ip,
-      userAgent: request.headers.get('user-agent'),
+      userAgent: request.headers.get('user-agent') || undefined,
     })
 
     return NextResponse.json({

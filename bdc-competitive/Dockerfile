@@ -5,9 +5,11 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies based on the preferred package manager
+# Copy package files
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+
+# Install ALL dependencies (including devDependencies for build)
+RUN npm ci
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -36,15 +38,31 @@ COPY --from=builder /app/public ./public
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
 
-# Automatically leverage output traces to reduce image size
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+# Check if standalone build exists, otherwise use standard build
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone* ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# If not using standalone, copy the full .next directory
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+
+# Ensure all files are owned by nextjs user
+RUN chown -R nextjs:nodejs /app
+
+# Switch to non-root user
 USER nextjs
 
+# Expose port
 EXPOSE 3000
 
+# Set environment variables
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["node", "server.js"]
+# Start command - try standalone first, fallback to npm start
+CMD if [ -f server.js ]; then \
+      node server.js; \
+    else \
+      npm start; \
+    fi

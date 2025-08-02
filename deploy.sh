@@ -61,7 +61,7 @@ fi
 # Clone or update repository
 if [ ! -d "/var/www/bdc-projects" ]; then
     print_status "Cloning BDC Projects repository..."
-    sudo git clone https://github.com/YOUR_USERNAME/bdc-projects.git /var/www/bdc-projects
+    sudo git clone https://github.com/mautomo/bdc-projects.git /var/www/bdc-projects
     sudo chown -R $USER:$USER /var/www/bdc-projects
 else
     print_status "Updating BDC Projects repository..."

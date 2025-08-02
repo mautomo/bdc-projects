@@ -63,7 +63,7 @@ export async function getRateLimitStatus(
   return {
     remainingPoints: result?.remainingPoints || rateLimiter.points,
     msBeforeNext: result?.msBeforeNext || 0,
-    totalHits: result?.totalHits || 0,
+    totalHits: (rateLimiter.points - (result?.remainingPoints || rateLimiter.points)),
   }
 }
 
@@ -88,7 +88,7 @@ export function withRateLimit(
     const { success, remainingPoints, msBeforeNext } = await checkRateLimit(type, identifier)
     
     if (!success) {
-      const retryAfter = Math.round(msBeforeNext / 1000)
+      const retryAfter = Math.round((msBeforeNext || 0) / 1000)
       return new Response(
         JSON.stringify({
           error: 'Too Many Requests',
@@ -102,7 +102,7 @@ export function withRateLimit(
             'Retry-After': retryAfter.toString(),
             'X-RateLimit-Limit': rateLimiters[type].points.toString(),
             'X-RateLimit-Remaining': remainingPoints?.toString() || '0',
-            'X-RateLimit-Reset': new Date(Date.now() + msBeforeNext).toISOString(),
+            'X-RateLimit-Reset': new Date(Date.now() + (msBeforeNext || 0)).toISOString(),
           },
         }
       )
