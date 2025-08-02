@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  bdc-competitive:
+    build:
+      context: ./bdc-competitive
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+    volumes:
+      - ./bdc-competitive:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - bdc-network
+
+  bdc-assessment:
+    build:
+      context: ./bdc-assessment
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+    restart: unless-stopped
+    volumes:
+      - ./bdc-assessment:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - bdc-network
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - bdc-competitive
+      - bdc-assessment
+    restart: unless-stopped
+    networks:
+      - bdc-network
+
+networks:
+  bdc-network:
+    driver: bridge
