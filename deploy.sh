@@ -71,6 +71,44 @@ fi
 
 cd /var/www/bdc-projects
 
+# Create production environment file
+print_status "Setting up environment configuration..."
+if [ ! -f ".env" ]; then
+    print_status "Creating production .env file..."
+    read -p "Enter NEXTAUTH_SECRET: " NEXTAUTH_SECRET
+    read -p "Enter GOOGLE_CLIENT_ID: " GOOGLE_CLIENT_ID
+    read -p "Enter GOOGLE_CLIENT_SECRET: " GOOGLE_CLIENT_SECRET
+    read -p "Enter DB_PASSWORD: " DB_PASSWORD
+    
+    cat > .env << EOL
+# NextAuth Configuration
+NEXTAUTH_URL=https://bdcapp.vandoko.com
+NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+
+# Database Configuration  
+DATABASE_URL=postgresql://postgres:$DB_PASSWORD@postgres:5432/bdc_dashboard
+
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
+GOOGLE_CLIENT_SECRET=$GOOGLE_CLIENT_SECRET
+
+# Email Configuration (SMTP)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@vandoko.com
+SMTP_PASSWORD=your-app-password
+SMTP_FROM=noreply@vandoko.com
+
+# Database Credentials
+DB_USER=postgres
+DB_PASSWORD=$DB_PASSWORD
+EOL
+    print_status "Environment file created successfully!"
+else
+    print_status "Environment file already exists, skipping creation."
+fi
+
 # Install dependencies
 print_status "Installing dependencies for BDC Competitive..."
 cd bdc-competitive
