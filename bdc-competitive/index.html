@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDC Strategy Dashboard | Multi-Rooftop Auto Group</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script>
+        // Fallback if primary CDN fails
+        if (typeof Chart === 'undefined') {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.js"><\/script>');
+        }
+        
+        // Basic JS test
+        console.log('JavaScript is working. Current time:', new Date().toLocaleTimeString());
+    </script>
+    
+    <!-- Simplified Chart Initialization -->
+    <script>
+        // Alternative simple initialization
+        function initCharts() {
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not available');
+                return;
+            }
+            
+            // Simple test chart
+            try {
+                const testCanvas = document.createElement('canvas');
+                const testCtx = testCanvas.getContext('2d');
+                new Chart(testCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Test'],
+                        datasets: [{
+                            data: [100],
+                            backgroundColor: ['#087BA4']
+                        }]
+                    }
+                });
+                console.log('Chart.js is working properly');
+            } catch (e) {
+                console.error('Chart.js test failed:', e);
+            }
+        }
+        
+        // Try initialization on multiple events
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initCharts);
+        } else {
+            initCharts();
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #087BA4;
+            --primary-dark: #082030;
+            --primary-light: #1697B1;
+            --accent: #98D5D7;
+            --surface: #ffffff;
+            --surface-variant: #f5f5f5;
+            --on-surface: #1a1a1a;
+            --on-primary: #ffffff;
+            --elevation-1: 0 2px 4px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.08);
+            --elevation-2: 0 4px 8px rgba(0,0,0,0.12), 0 8px 24px rgba(0,0,0,0.12);
+            --elevation-3: 0 8px 16px rgba(0,0,0,0.16), 0 16px 32px rgba(0,0,0,0.16);
+            --border-radius: 30px;
+            --border-radius-medium: 20px;
+            --border-radius-small: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f0f4f8;
+            color: var(--on-surface);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(250deg, #98D5D7 1.2%, #1697B1 43.67%, #082030 81.6%);
+            color: var(--on-primary);
+            padding: 60px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 40%;
+            height: 200%;
+            background: rgba(255,255,255,0.05);
+            transform: rotate(25deg);
+        }
+
+        .header h1 {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 500;
+            letter-spacing: -2px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .header p {
+            font-size: 1.125rem;
+            font-weight: 300;
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0.9;
+            position: relative;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .surface-card {
+            background: var(--surface);
+            border-radius: var(--border-radius);
+            padding: 40px;
+            box-shadow: var(--elevation-1);
+            margin-bottom: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .surface-card:hover {
+            box-shadow: var(--elevation-2);
+            transform: translateY(-4px);
+        }
+
+        .highlight-card {
+            background: linear-gradient(135deg, #98D5D7 0%, #1697B1 100%);
+            color: var(--on-primary);
+            border-radius: var(--border-radius-medium);
+            padding: 32px;
+            text-align: center;
+            margin: 24px 0;
+        }
+
+        .metric-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+        }
+
+        .metric-value {
+            font-size: 3.5rem;
+            font-weight: 600;
+            letter-spacing: -2px;
+        }
+
+        .metric-label {
+            text-align: left;
+        }
+
+        .metric-label strong {
+            display: block;
+            font-size: 1.25rem;
+            font-weight: 500;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 500;
+            color: var(--primary-dark);
+            margin-bottom: 32px;
+            text-align: center;
+            letter-spacing: -1px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
+        }
+
+        .model-card {
+            background: var(--surface);
+            border-radius: var(--border-radius-medium);
+            padding: 32px;
+            box-shadow: var(--elevation-1);
+            border-top: 4px solid;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .model-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--elevation-3);
+        }
+
+        .model-card:nth-child(1) { border-top-color: #1697B1; }
+        .model-card:nth-child(2) { border-top-color: #F7C906; }
+        .model-card:nth-child(3) { border-top-color: #E0B605; }
+
+        .model-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: var(--surface-variant);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .model-icon svg {
+            width: 48px;
+            height: 48px;
+            fill: var(--primary);
+        }
+
+        .model-card h3 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .model-card p {
+            color: #666;
+            font-weight: 300;
+        }
+
+        .cost-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .cost-details h2 {
+            font-size: 2rem;
+            font-weight: 500;
+            color: var(--primary-dark);
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+        }
+
+        .cost-highlight {
+            margin: 24px 0;
+        }
+
+        .cost-label {
+            font-size: 1.125rem;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .cost-value {
+            font-size: 4rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #F7C906 0%, #E0B605 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -3px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            min-height: 300px;
+            background: var(--surface-variant);
+            border-radius: var(--border-radius-medium);
+            padding: 20px;
+        }
+        
+        canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .vendor-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+
+        .vendor-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .vendor-item {
+            background: var(--surface-variant);
+            border-radius: var(--border-radius-small);
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .vendor-item:hover {
+            transform: translateX(8px);
+            box-shadow: var(--elevation-1);
+        }
+
+        .vendor-item strong {
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .ai-section {
+            background: linear-gradient(250deg, #082030 0%, #1697B1 50%, #98D5D7 100%);
+            color: var(--on-primary);
+            border-radius: var(--border-radius);
+            padding: 48px;
+            margin-bottom: 32px;
+        }
+
+        .ai-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: var(--border-radius-medium);
+            padding: 32px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 3rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: #F7C906;
+            margin-bottom: 8px;
+        }
+
+        .stat-description {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .hybrid-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 32px;
+            flex-wrap: wrap;
+        }
+
+        .flow-card {
+            background: var(--surface-variant);
+            border-left: 4px solid;
+            border-radius: var(--border-radius-small);
+            padding: 32px;
+            flex: 1;
+            min-width: 300px;
+            text-align: center;
+        }
+
+        .flow-card:first-child { border-left-color: #F7C906; }
+        .flow-card:last-child { border-left-color: #E0B605; }
+
+        .flow-arrow {
+            font-size: 3rem;
+            color: var(--primary);
+            font-weight: 300;
+        }
+
+        .footer {
+            background: #f5f5f5;
+            padding: 32px;
+            text-align: center;
+            color: #666;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .cost-section,
+            .vendor-grid,
+            .ai-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .hybrid-flow {
+                flex-direction: column;
+            }
+            
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>The BDC Crossroads</h1>
+        <p>A Dealer Principal's Guide to Structuring a High-Profit BDC for a 9-Rooftop Group</p>
+    </header>
+
+    <main class="container">
+        <section class="surface-card">
+            <p style="font-size: 1.5rem; font-weight: 500; color: var(--primary-dark); text-align: center; margin-bottom: 16px;">
+                The Modern BDC is Your #1 Profit Center
+            </p>
+            <p style="text-align: center; color: #666; margin-bottom: 24px;">
+                The most critical factor in converting marketing spend into sales is speed. A slow response is a lost opportunity.
+            </p>
+            <div class="highlight-card">
+                <div class="metric-display">
+                    <div class="metric-value">900%</div>
+                    <div class="metric-label">
+                        <strong>Higher Lead Conversion</strong>
+                        <span>When responding in under 5 minutes.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-title">Three Strategic Paths to BDC Excellence</h2>
+            <div class="cards-grid">
+                <div class="model-card">
+                    <div class="model-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </div>
+                    <h3>In-House Centralized</h3>
+                    <p>Maximum control over brand and process. Build your own team, your way.</p>
+                </div>
+                <div class="model-card">
+                    <div class="model-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+                        </svg>
+                    </div>
+                    <h3>Fully Outsourced</h3>
+                    <p>Maximum efficiency and scalability. Leverage expert partners and technology.</p>
+                </div>
+                <div class="model-card">
+                    <div class="model-icon">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 2l-5.5 9h11L12 2zm0 3.84L13.93 9h-3.87L12 5.84zM17.5 13c-2.49 0-4.5 2.01-4.5 4.5s2.01 4.5 4.5 4.5 4.5-2.01 4.5-4.5-2.01-4.5-4.5-4.5zM6.5 13C4.01 13 2 15.01 2 17.5S4.01 22 6.5 22 11 19.99 11 17.5 8.99 13 6.5 13z"/>
+                        </svg>
+                    </div>
+                    <h3>The Hybrid Model</h3>
+                    <p>A balanced approach. Combine partner efficiency with in-house expertise.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="surface-card">
+            <div class="cost-section">
+                <div class="cost-details">
+                    <h2>The In-House Build: The True Cost of Control</h2>
+                    <p style="color: #666; margin-bottom: 24px;">Building a centralized BDC for 9 rooftops is a massive undertaking. It requires significant capital and operational investment, primarily in staffing and a sophisticated technology stack.</p>
+                    <div class="cost-highlight">
+                        <p class="cost-label">Projected Annual Operating Cost:</p>
+                        <div class="cost-value">$1,535,500</div>
+                    </div>
+                </div>
+                <div>
+                    <h3 style="text-align: center; margin-bottom: 24px; color: var(--primary-dark);">Annual Cost Breakdown</h3>
+                    <div class="chart-container" style="min-height: 300px;">
+                        <canvas id="inHouseCostChart" aria-label="Annual cost breakdown chart" style="max-width: 100%; max-height: 100%;"></canvas>
+                        <noscript>
+                            <p style="text-align: center; padding: 40px;">JavaScript is required to view this chart.</p>
+                        </noscript>
+                    </div>
+                    <!-- Alternative table view -->
+                    <details style="margin-top: 20px;">
+                        <summary style="cursor: pointer; color: var(--primary); font-size: 0.875rem;">View Cost Breakdown</summary>
+                        <table style="width: 100%; margin-top: 10px; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--surface-variant);">
+                                    <th style="padding: 12px; text-align: left;">Category</th>
+                                    <th style="padding: 12px; text-align: right;">Annual Cost</th>
+                                    <th style="padding: 12px; text-align: right;">Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td style="padding: 12px;">Staffing & Benefits</td><td style="text-align: right;">$1,046,500</td><td style="text-align: right;">68%</td></tr>
+                                <tr style="background: var(--surface-variant);"><td style="padding: 12px;">Technology Stack</td><td style="text-align: right;">$384,000</td><td style="text-align: right;">25%</td></tr>
+                                <tr><td style="padding: 12px;">Infrastructure & Overhead</td><td style="text-align: right;">$105,000</td><td style="text-align: right;">7%</td></tr>
+                                <tr style="background: var(--surface-variant); font-weight: 600;"><td style="padding: 12px;">Total</td><td style="text-align: right;">$1,535,500</td><td style="text-align: right;">100%</td></tr>
+                            </tbody>
+                        </table>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <section class="surface-card">
+            <h2 class="section-title">The Outsourced Partnership: Choosing Your Philosophy</h2>
+            <p style="text-align: center; color: #666; max-width: 800px; margin: 0 auto 32px;">
+                Top vendors fall into two camps: "AI-First" for tech-driven efficiency, and "Human-First" for a high-touch, concierge experience. Your choice depends on your brand's strategic goals.
+            </p>
+            <div class="vendor-grid">
+                <div>
+                    <h3 style="text-align: center; margin-bottom: 24px; color: var(--primary-dark);">Vendor Core Philosophies</h3>
+                    <div class="chart-container" style="min-height: 300px;">
+                        <canvas id="vendorPhilosophyChart" aria-label="Vendor philosophy comparison chart" style="max-width: 100%; max-height: 100%;"></canvas>
+                    </div>
+                    <!-- Alternative table view -->
+                    <details style="margin-top: 20px;">
+                        <summary style="cursor: pointer; color: var(--primary); font-size: 0.875rem;">View as Table</summary>
+                        <table style="width: 100%; margin-top: 10px; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: var(--surface-variant);">
+                                    <th style="padding: 12px; text-align: left;">Vendor</th>
+                                    <th style="padding: 12px; text-align: center;">AI-First %</th>
+                                    <th style="padding: 12px; text-align: center;">Human-First %</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td style="padding: 12px;">Strolid</td><td style="text-align: center;">90%</td><td style="text-align: center;">40%</td></tr>
+                                <tr style="background: var(--surface-variant);"><td style="padding: 12px;">Better Car People</td><td style="text-align: center;">20%</td><td style="text-align: center;">95%</td></tr>
+                                <tr><td style="padding: 12px;">DGA Auto</td><td style="text-align: center;">85%</td><td style="text-align: center;">50%</td></tr>
+                                <tr style="background: var(--surface-variant);"><td style="padding: 12px;">Virtual BDC</td><td style="text-align: center;">10%</td><td style="text-align: center;">98%</td></tr>
+                            </tbody>
+                        </table>
+                    </details>
+                </div>
+                <div>
+                    <h3 style="text-align: center; margin-bottom: 24px; color: var(--primary-dark);">Key Vendor Capabilities</h3>
+                    <div class="vendor-list">
+                        <div class="vendor-item">
+                            <strong>Strolid:</strong> 24/7/365 Coverage, AI-First Platform
+                        </div>
+                        <div class="vendor-item">
+                            <strong>Better Car People:</strong> 24/7 Support, Human-First Experts
+                        </div>
+                        <div class="vendor-item">
+                            <strong>AllCall:</strong> 24/7 Support, Strong Testimonials
+                        </div>
+                        <div class="vendor-item">
+                            <strong>VirBDC:</strong> Guaranteed &lt;5 Min Response, Human-Centric
+                        </div>
+                        <div class="vendor-item">
+                            <strong>DGA Auto:</strong> Premium Service, Advanced Proprietary AI
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="ai-section">
+            <h2 style="text-align: center; font-size: 2rem; margin-bottom: 16px;">The AI Revolution is Here</h2>
+            <p style="text-align: center; max-width: 800px; margin: 0 auto 40px; opacity: 0.9;">
+                AI isn't the future, it's the now. It handles high-volume tasks with superhuman speed and efficiency, freeing your human experts to focus on what they do best: building relationships and closing deals.
+            </p>
+            <div class="ai-grid">
+                <div>
+                    <h3 style="text-align: center; margin-bottom: 24px;">Case Study: AI vs. Human BDC</h3>
+                    <p style="text-align: center; margin-bottom: 24px; opacity: 0.9;">
+                        In a 1-month A/B test at an 8-store group, a single AI agent booked the vast majority of all sales appointments.
+                    </p>
+                    <div class="chart-container" style="background: rgba(255,255,255,0.1); min-height: 300px;">
+                        <canvas id="aiPerformanceChart" aria-label="AI vs Human performance comparison" style="max-width: 100%; max-height: 100%;"></canvas>
+                    </div>
+                    <!-- Alternative view -->
+                    <details style="margin-top: 20px;">
+                        <summary style="cursor: pointer; color: #F7C906; font-size: 0.875rem;">View Performance Data</summary>
+                        <div style="margin-top: 10px; display: flex; gap: 20px; justify-content: center;">
+                            <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 2rem; font-weight: 600; color: #F7C906;">84%</div>
+                                <div style="font-size: 0.875rem;">AI Agent (1)</div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 8px; text-align: center;">
+                                <div style="font-size: 2rem; font-weight: 600; color: #98D5D7;">16%</div>
+                                <div style="font-size: 0.875rem;">Human Agents (3)</div>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 24px;">
+                    <div class="stat-card">
+                        <div class="stat-value">40%</div>
+                        <div class="stat-label">Reduction in BDC Workload</div>
+                        <div class="stat-description">by automating inbound service calls (Martin Management Group).</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">$2M+</div>
+                        <div class="stat-label">Revenue in 90 Days</div>
+                        <div class="stat-description">from AI-booked service appointments.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="surface-card">
+            <h2 class="section-title">The Hybrid Model: The Strategic Sweet Spot</h2>
+            <p style="text-align: center; color: #666; max-width: 900px; margin: 0 auto 40px;">
+                This model offers the best of both worlds: the efficiency of an outsourced partner for high-volume tasks and the control of an in-house team for high-value customer interactions. It optimizes for cost, control, and performance.
+            </p>
+            <div class="hybrid-flow">
+                <div class="flow-card">
+                    <h3 style="color: #CA6702; margin-bottom: 16px;">Tier 1: External Partner</h3>
+                    <p style="font-weight: 500; margin-bottom: 8px;">The Heavy Lifters</p>
+                    <p style="color: #666; font-size: 0.875rem;">An AI-powered partner provides 24/7 coverage, handles all initial lead responses, and filters out noise, qualifying the best prospects.</p>
+                </div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-card">
+                    <h3 style="color: #9B2226; margin-bottom: 16px;">Tier 2: Internal Team</h3>
+                    <p style="font-weight: 500; margin-bottom: 8px;">The Specialists</p>
+                    <p style="color: #666; font-size: 0.875rem;">A small, elite in-house team receives only warm, qualified leads, focusing on high-quality relationship management to secure the appointment.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="surface-card">
+            <h2 class="section-title">Your Decision Framework</h2>
+            <p style="text-align: center; color: #666; max-width: 700px; margin: 0 auto 40px;">
+                There is no single right answer, only the right answer for your group's priorities. Use this framework to weigh the strategic trade-offs between cost, control, speed, and scalability.
+            </p>
+            <div class="chart-container" style="height: 450px; min-height: 350px;">
+                <canvas id="decisionRadarChart" aria-label="Decision framework comparison" style="max-width: 100%; max-height: 100%;"></canvas>
+            </div>
+            <!-- Fallback table in case charts don't load -->
+            <noscript>
+                <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--surface-variant);">
+                            <th style="padding: 12px; text-align: left;">Criteria</th>
+                            <th style="padding: 12px;">In-House</th>
+                            <th style="padding: 12px;">Outsourced</th>
+                            <th style="padding: 12px;">Hybrid</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td style="padding: 12px;">Cost-Efficiency</td><td style="text-align: center;">2/10</td><td style="text-align: center;">8/10</td><td style="text-align: center;">7/10</td></tr>
+                        <tr style="background: var(--surface-variant);"><td style="padding: 12px;">Brand Control</td><td style="text-align: center;">10/10</td><td style="text-align: center;">4/10</td><td style="text-align: center;">7/10</td></tr>
+                        <tr><td style="padding: 12px;">Speed to Market</td><td style="text-align: center;">2/10</td><td style="text-align: center;">10/10</td><td style="text-align: center;">7/10</td></tr>
+                        <tr style="background: var(--surface-variant);"><td style="padding: 12px;">Scalability</td><td style="text-align: center;">4/10</td><td style="text-align: center;">10/10</td><td style="text-align: center;">8/10</td></tr>
+                        <tr><td style="padding: 12px;">Management Overhead</td><td style="text-align: center;">2/10</td><td style="text-align: center;">9/10</td><td style="text-align: center;">7/10</td></tr>
+                    </tbody>
+                </table>
+            </noscript>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>Strategic Analysis for Automotive Dealer Principals. Data synthesized from industry reports and vendor information.</p>
+        <!-- Debug info (hidden by default) -->
+        <details style="margin-top: 20px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">
+            <summary style="cursor: pointer; font-size: 0.75rem; color: #999;">Debug Information</summary>
+            <div id="debugInfo" style="margin-top: 10px; font-size: 0.75rem; color: #666;">
+                <p>Chart.js Status: <span id="chartStatus">Checking...</span></p>
+                <p>Canvas Elements Found: <span id="canvasCount">0</span></p>
+                <p>Script Errors: <span id="scriptErrors">None</span></p>
+            </div>
+        </details>
+    </footer>
+
+    <script>
+        // Initial test to verify script execution
+        console.log('BDC Dashboard: Script initialization started');
+        
+        // Update debug info
+        window.addEventListener('DOMContentLoaded', function() {
+            const debugElements = {
+                chartStatus: document.getElementById('chartStatus'),
+                canvasCount: document.getElementById('canvasCount'),
+                scriptErrors: document.getElementById('scriptErrors')
+            };
+            
+            if (debugElements.chartStatus) {
+                debugElements.chartStatus.textContent = typeof Chart !== 'undefined' ? 'Loaded' : 'Not Loaded';
+            }
+            
+            if (debugElements.canvasCount) {
+                debugElements.canvasCount.textContent = document.querySelectorAll('canvas').length;
+            }
+        });
+        
+        // Wait for DOM to be fully loaded
+        window.addEventListener('load', function() {
+            console.log('BDC Dashboard: Window loaded, Chart.js status:', typeof Chart !== 'undefined' ? 'Loaded' : 'Not loaded');
+            
+            // Double-check Chart.js is available
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js failed to load');
+                // Show error message in chart containers
+                document.querySelectorAll('.chart-container').forEach(container => {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <p style="color: #666; margin-bottom: 20px;">Unable to load charts. Chart.js library not found.</p>
+                            <button onclick="location.reload()" style="
+                                background: var(--primary);
+                                color: white;
+                                border: none;
+                                padding: 12px 24px;
+                                border-radius: 8px;
+                                cursor: pointer;
+                                font-family: 'Poppins', sans-serif;
+                                font-size: 14px;
+                            ">Reload Page</button>
+                        </div>
+                    `;
+                });
+                return;
+            }
+
+            const colors = {
+                primary: '#087BA4',
+                primaryDark: '#082030',
+                primaryLight: '#1697B1',
+                accent: '#98D5D7',
+                gold: '#F7C906',
+                orange: '#E0B605',
+                red: '#AE2012',
+                darkRed: '#9B2226'
+            };
+
+            // Set Chart.js defaults
+            Chart.defaults.font.family = 'Poppins';
+            Chart.defaults.font.size = 14;
+
+            try {
+                    // In-House Cost Chart
+                    const ctx1 = document.getElementById('inHouseCostChart');
+                    if (ctx1) {
+                        new Chart(ctx1.getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Staffing & Benefits', 'Technology Stack', 'Infrastructure & Overhead'],
+                            datasets: [{
+                                label: 'Cost Breakdown',
+                                data: [1046500, 384000, 105000],
+                                backgroundColor: [colors.primaryLight, colors.gold, colors.red],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 20,
+                                        font: {
+                                            size: 12
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed !== null) {
+                                                label += new Intl.NumberFormat('en-US', { 
+                                                    style: 'currency', 
+                                                    currency: 'USD', 
+                                                    minimumFractionDigits: 0 
+                                                }).format(context.parsed);
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Vendor Philosophy Chart
+                const ctx2 = document.getElementById('vendorPhilosophyChart');
+                console.log('Initializing Vendor Philosophy Chart, canvas found:', !!ctx2);
+                if (ctx2) {
+                    new Chart(ctx2.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['Strolid', 'Better Car People', 'DGA Auto', 'Virtual BDC'],
+                            datasets: [{
+                                label: 'AI-First',
+                                data: [90, 20, 85, 10],
+                                backgroundColor: colors.primaryLight,
+                                borderRadius: 8
+                            }, {
+                                label: 'Human-First',
+                                data: [40, 95, 50, 98],
+                                backgroundColor: colors.gold,
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            indexAxis: 'y',
+                            scales: {
+                                x: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    ticks: {
+                                        callback: (value) => value + '%',
+                                        font: {
+                                            size: 11
+                                        }
+                                    },
+                                    grid: {
+                                        display: true,
+                                        color: '#f0f0f0'
+                                    }
+                                },
+                                y: {
+                                    grid: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        font: {
+                                            size: 12
+                                        }
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        font: {
+                                            size: 12
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    enabled: true,
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.dataset.label + ': ' + context.parsed.x + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // AI Performance Chart
+                const ctx3 = document.getElementById('aiPerformanceChart');
+                console.log('Initializing AI Performance Chart, canvas found:', !!ctx3);
+                if (ctx3) {
+                    new Chart(ctx3.getContext('2d'), {
+                        type: 'bar',
+                        data: {
+                            labels: ['Appointments Booked'],
+                            datasets: [{
+                                label: 'AI Agent (1)',
+                                data: [84],
+                                backgroundColor: colors.gold,
+                                borderRadius: 8,
+                                barPercentage: 0.6
+                            }, {
+                                label: 'Human Agents (3)',
+                                data: [16],
+                                backgroundColor: colors.accent,
+                                borderRadius: 8,
+                                barPercentage: 0.6
+                            }]
+                        },
+                        options: {
+                            indexAxis: 'y',
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: {
+                                    stacked: true,
+                                    max: 100,
+                                    ticks: {
+                                        callback: (value) => value + '%',
+                                        color: 'white',
+                                        font: {
+                                            size: 12
+                                        }
+                                    },
+                                    grid: {
+                                        color: 'rgba(255, 255, 255, 0.1)'
+                                    }
+                                },
+                                y: {
+                                    stacked: true,
+                                    display: false
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        color: 'white',
+                                        font: {
+                                            size: 12
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return context.dataset.label + ': ' + context.parsed.x + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Decision Radar Chart
+                const ctx4 = document.getElementById('decisionRadarChart');
+                console.log('Initializing Decision Radar Chart, canvas found:', !!ctx4);
+                if (ctx4) {
+                    new Chart(ctx4.getContext('2d'), {
+                        type: 'radar',
+                        data: {
+                            labels: ['Cost-Efficiency', 'Brand Control', 'Speed to Market', 'Scalability', 'Management Overhead'],
+                            datasets: [{
+                                label: 'In-House',
+                                data: [2, 10, 2, 4, 2],
+                                fill: true,
+                                backgroundColor: 'rgba(22, 151, 177, 0.2)',
+                                borderColor: colors.primaryLight,
+                                pointBackgroundColor: colors.primaryLight,
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: colors.primaryLight,
+                                borderWidth: 2
+                            }, {
+                                label: 'Outsourced',
+                                data: [8, 4, 10, 10, 9],
+                                fill: true,
+                                backgroundColor: 'rgba(247, 201, 6, 0.2)',
+                                borderColor: colors.gold,
+                                pointBackgroundColor: colors.gold,
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: colors.gold,
+                                borderWidth: 2
+                            }, {
+                                label: 'Hybrid',
+                                data: [7, 7, 7, 8, 7],
+                                fill: true,
+                                backgroundColor: 'rgba(174, 32, 18, 0.2)',
+                                borderColor: colors.red,
+                                pointBackgroundColor: colors.red,
+                                pointBorderColor: '#fff',
+                                pointHoverBackgroundColor: '#fff',
+                                pointHoverBorderColor: colors.red,
+                                borderWidth: 2
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                r: {
+                                    angleLines: {
+                                        color: '#e0e0e0'
+                                    },
+                                    grid: {
+                                        color: '#e0e0e0'
+                                    },
+                                    pointLabels: {
+                                        font: {
+                                            size: 12,
+                                            weight: '500'
+                                        },
+                                        color: '#666'
+                                    },
+                                    ticks: {
+                                        backdropColor: 'white',
+                                        stepSize: 2,
+                                        color: '#999',
+                                        font: {
+                                            size: 10
+                                        }
+                                    },
+                                    min: 0,
+                                    max: 10
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 20,
+                                        font: {
+                                            size: 12
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                console.log('BDC Dashboard: All charts initialized successfully');
+            } catch (error) {
+                console.error('Error initializing charts:', error);
+                // Update debug info
+                const errorElement = document.getElementById('scriptErrors');
+                if (errorElement) {
+                    errorElement.textContent = error.message || 'Unknown error';
+                }
+                // Show error message
+                document.querySelectorAll('.chart-container').forEach(container => {
+                    container.innerHTML = '<p style="text-align: center; padding: 40px; color: #666;">Error loading chart. Please refresh the page.</p>';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
