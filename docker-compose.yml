@@ -35,6 +35,48 @@ services:
     networks:
       - bdc-network
 
+  bdc-dashboard:
+    build:
+      context: ./bdc-dashboard
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - PORT=3002
+      - NEXTAUTH_URL=https://bdcapp.vandoko.com
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - DATABASE_URL=${DATABASE_URL}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_SECURE=${SMTP_SECURE}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - SMTP_FROM=${SMTP_FROM}
+    restart: unless-stopped
+    volumes:
+      - ./bdc-dashboard:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - bdc-network
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=bdc_dashboard
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - bdc-network
+    restart: unless-stopped
+
   nginx:
     image: nginx:alpine
     ports:
@@ -46,6 +88,7 @@ services:
     depends_on:
       - bdc-competitive
       - bdc-assessment
+      - bdc-dashboard
     restart: unless-stopped
     networks:
       - bdc-network
@@ -53,3 +96,6 @@ services:
 networks:
   bdc-network:
     driver: bridge
+
+volumes:
+  postgres_data:

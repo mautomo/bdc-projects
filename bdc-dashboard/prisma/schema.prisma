@@ -1,0 +1,139 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole  @default(USER)
+  status        UserStatus @default(ACTIVE)
+  authType      AuthType  @default(GOOGLE_SSO)
+  password      String?   // Only for external users
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastLoginAt   DateTime?
+  
+  accounts      Account[]
+  sessions      Session[]
+  invitations   UserInvitation[]
+  auditLogs     AuditLog[]
+  
+  @@map("users")
+}
+
+model UserInvitation {
+  id          String            @id @default(cuid())
+  email       String
+  token       String            @unique
+  role        UserRole          @default(USER)
+  status      InvitationStatus  @default(PENDING)
+  expiresAt   DateTime
+  createdAt   DateTime          @default(now())
+  invitedBy   String
+  
+  invitedByUser User @relation(fields: [invitedBy], references: [id])
+  
+  @@map("user_invitations")
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  used      Boolean  @default(false)
+  
+  @@map("password_resets")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  resource  String?
+  details   Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  
+  user User? @relation(fields: [userId], references: [id])
+  
+  @@map("audit_logs")
+}
+
+model SecuritySettings {
+  id                    String  @id @default(cuid())
+  maxLoginAttempts      Int     @default(5)
+  lockoutDurationMinutes Int    @default(30)
+  sessionTimeoutMinutes Int     @default(480) // 8 hours
+  passwordMinLength     Int     @default(12)
+  requireSpecialChars   Boolean @default(true)
+  requireNumbers        Boolean @default(true)
+  requireUppercase      Boolean @default(true)
+  requireLowercase      Boolean @default(true)
+  
+  @@map("security_settings")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  USER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum AuthType {
+  GOOGLE_SSO
+  PASSWORD
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}

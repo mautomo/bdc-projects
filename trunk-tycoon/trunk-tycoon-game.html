@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trunk Tycoon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .car {
+            width: 200px;
+            height: 100px;
+            background-color: #f87171;
+            border-radius: 10px 10px 0 0;
+            position: relative;
+        }
+        .trunk {
+            width: 60px;
+            height: 40px;
+            background-color: #fca5a5;
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            border-radius: 5px 0 0 0;
+            transition: transform 0.5s;
+        }
+        .trunk.open {
+            transform: rotate(-90deg);
+        }
+        .wheel {
+            width: 40px;
+            height: 40px;
+            background-color: #333;
+            border-radius: 50%;
+            position: absolute;
+            bottom: -20px;
+        }
+        .customer {
+            width: 30px;
+            height: 30px;
+            background-color: #60a5fa;
+            border-radius: 50%;
+            position: absolute;
+            cursor: pointer;
+        }
+        .game-board {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background-color: #dcfce7;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-4xl mx-auto">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-2">Trunk Tycoon</h1>
+        <p class="text-center text-gray-600 mb-6">Capture customers to fill your trunk and complete the level!</p>
+
+        <div id="game-container" class="bg-white p-6 rounded-lg shadow-lg">
+            <!-- Game Info Bar -->
+            <div class="flex justify-between items-center mb-4 text-lg">
+                <div><strong>Level:</strong> <span id="level">1</span></div>
+                <div><strong>Points:</strong> <span id="points">0</span></div>
+                <div><strong>Objective:</strong> <span id="objective">100</span> Points</div>
+            </div>
+
+            <!-- Marketing Modal Trigger -->
+            <div class="text-center mb-4">
+                <button id="open-marketing-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow">
+                    Marketing Strategy
+                </button>
+            </div>
+            
+            <!-- Game Board -->
+            <div id="game-board" class="game-board">
+                <div id="car" class="car absolute bottom-5 left-5">
+                    <div id="trunk" class="trunk"></div>
+                    <div class="wheel" style="left: 20px;"></div>
+                    <div class="wheel" style="right: 20px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Marketing Modal -->
+    <div id="marketing-modal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl p-8 max-w-lg w-full">
+            <h2 class="text-2xl font-bold mb-4">Plan Your Marketing</h2>
+            <p class="mb-4">Invest your points to attract customers. Current Points: <span id="modal-points">0</span></p>
+            
+            <div id="marketing-channels">
+                <!-- Marketing channels will be injected here by JS -->
+            </div>
+
+            <div class="mt-6 flex justify-between items-center">
+                <div>
+                    <strong>Total Investment:</strong> <span id="total-investment">0</span>
+                </div>
+                <div>
+                    <button id="launch-campaign-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg">Launch Campaign</button>
+                    <button id="close-marketing-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg ml-2">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Level Complete Modal -->
+    <div id="level-complete-modal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl p-8 text-center">
+            <h2 class="text-3xl font-bold text-green-500 mb-4">Level Complete!</h2>
+            <p class="text-lg mb-6">You've hit your objective! Get ready for the next level.</p>
+            <button id="next-level-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">Next Level</button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center hidden">
+        <div class="bg-white rounded-lg shadow-xl p-8 text-center">
+            <h2 class="text-3xl font-bold text-red-500 mb-4">Game Over!</h2>
+            <p class="text-lg mb-6">You didn't generate enough customers. Better luck next time!</p>
+            <button id="restart-game-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">Restart Game</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const game = {
+                level: 1,
+                points: 50, // Starting points for the first level's marketing
+                objective: 100,
+                customersOnScreen: 0,
+                maxCustomers: 15,
+                
+                elements: {
+                    level: document.getElementById('level'),
+                    points: document.getElementById('points'),
+                    objective: document.getElementById('objective'),
+                    gameBoard: document.getElementById('game-board'),
+                    trunk: document.getElementById('trunk'),
+                    car: document.getElementById('car'),
+                    openMarketingBtn: document.getElementById('open-marketing-btn'),
+                    closeMarketingBtn: document.getElementById('close-marketing-btn'),
+                    marketingModal: document.getElementById('marketing-modal'),
+                    modalPoints: document.getElementById('modal-points'),
+                    marketingChannelsContainer: document.getElementById('marketing-channels'),
+                    totalInvestment: document.getElementById('total-investment'),
+                    launchCampaignBtn: document.getElementById('launch-campaign-btn'),
+                    levelCompleteModal: document.getElementById('level-complete-modal'),
+                    gameOverModal: document.getElementById('game-over-modal'),
+                    nextLevelBtn: document.getElementById('next-level-btn'),
+                    restartGameBtn: document.getElementById('restart-game-btn'),
+                },
+
+                marketingConfig: [
+                    { id: 'paid-search', name: 'Paid Search', baseCost: 25, effectiveness: 2.2 },
+                    { id: 'seo', name: 'SEO', baseCost: 20, effectiveness: 1.9 },
+                    { id: '3rd-party', name: '3rd Party Leads', baseCost: 40, effectiveness: 3.0 },
+                    { id: 'email', name: 'Email Campaigns', baseCost: 5, effectiveness: 1.2 },
+                    { id: 'traditional', name: 'Traditional (TV/Radio)', baseCost: 50, effectiveness: 2.8 }
+                ],
+                
+                investments: {},
+
+                init() {
+                    this.updateUI();
+                    this.setupEventListeners();
+                    this.renderMarketingChannels();
+                },
+
+                setupEventListeners() {
+                    this.elements.openMarketingBtn.addEventListener('click', () => this.showMarketingModal());
+                    this.elements.closeMarketingBtn.addEventListener('click', () => this.hideMarketingModal());
+                    this.elements.launchCampaignBtn.addEventListener('click', () => this.launchCampaign());
+                    this.elements.nextLevelBtn.addEventListener('click', () => this.nextLevel());
+                    this.elements.restartGameBtn.addEventListener('click', () => this.restartGame());
+                },
+
+                updateUI() {
+                    this.elements.level.textContent = this.level;
+                    this.elements.points.textContent = this.points;
+                    this.elements.objective.textContent = `${this.objective} Points`;
+                    this.elements.modalPoints.textContent = this.points;
+                },
+
+                renderMarketingChannels() {
+                    this.elements.marketingChannelsContainer.innerHTML = '';
+                    this.marketingConfig.forEach(channel => {
+                        const channelDiv = document.createElement('div');
+                        channelDiv.className = 'flex justify-between items-center mb-2';
+                        channelDiv.innerHTML = `
+                            <label for="${channel.id}" class="text-lg">${channel.name} (Cost: ${channel.baseCost})</label>
+                            <input type="number" id="${channel.id}-investment" data-cost="${channel.baseCost}" data-effectiveness="${channel.effectiveness}" class="w-24 p-1 border rounded" min="0" value="0">
+                        `;
+                        this.elements.marketingChannelsContainer.appendChild(channelDiv);
+                    });
+
+                    this.elements.marketingChannelsContainer.addEventListener('input', () => this.updateTotalInvestment());
+                },
+
+                updateTotalInvestment() {
+                    let total = 0;
+                    this.elements.marketingChannelsContainer.querySelectorAll('input').forEach(input => {
+                        const cost = parseInt(input.dataset.cost);
+                        const value = parseInt(input.value) || 0;
+                        total += value * cost;
+                    });
+                    this.elements.totalInvestment.textContent = total;
+                },
+
+                showMarketingModal() {
+                    this.elements.marketingModal.classList.remove('hidden');
+                },
+
+                hideMarketingModal() {
+                    this.elements.marketingModal.classList.add('hidden');
+                },
+                
+                launchCampaign() {
+                    const totalInvestment = parseInt(this.elements.totalInvestment.textContent);
+                    if (totalInvestment > this.points) {
+                        // Create a custom alert modal instead of using alert()
+                        const alertModal = document.createElement('div');
+                        alertModal.className = 'fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center';
+                        alertModal.innerHTML = `
+                            <div class="bg-white rounded-lg shadow-xl p-8 text-center">
+                                <h2 class="text-2xl font-bold text-yellow-500 mb-4">Warning</h2>
+                                <p class="text-lg mb-6">Not enough points to launch this campaign!</p>
+                                <button onclick="this.parentElement.parentElement.remove()" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-6 rounded-lg">OK</button>
+                            </div>
+                        `;
+                        document.body.appendChild(alertModal);
+                        return;
+                    }
+
+                    this.points -= totalInvestment;
+                    this.investments = {};
+                    let totalEffectiveness = 0;
+
+                    this.elements.marketingChannelsContainer.querySelectorAll('input').forEach(input => {
+                        const value = parseInt(input.value) || 0;
+                        if (value > 0) {
+                            this.investments[input.id.replace('-investment', '')] = value;
+                            totalEffectiveness += value * parseFloat(input.dataset.effectiveness);
+                        }
+                    });
+
+                    this.hideMarketingModal();
+                    this.updateUI();
+                    this.generateCustomers(totalEffectiveness);
+                },
+
+                generateCustomers(effectiveness) {
+                    this.clearCustomers();
+                    const numCustomers = Math.floor(effectiveness * (Math.random() * 0.5 + 0.8)); // Add some randomness
+                    this.customersOnScreen = numCustomers;
+
+                    if (numCustomers === 0 && this.points < this.objective) {
+                        setTimeout(() => this.showGameOverModal(), 1000);
+                        return;
+                    }
+
+                    for (let i = 0; i < numCustomers; i++) {
+                        this.createCustomer();
+                    }
+                },
+
+                createCustomer() {
+                    const customer = document.createElement('div');
+                    customer.className = 'customer';
+                    
+                    const boardRect = this.elements.gameBoard.getBoundingClientRect();
+                    customer.style.left = `${Math.random() * (boardRect.width - 30)}px`;
+                    customer.style.top = `${Math.random() * (boardRect.height - 150)}px`; // Keep them away from the car initially
+
+                    const value = Math.floor(Math.random() * 41) - 10; // -10 to 30 points
+                    customer.dataset.value = value;
+                    customer.style.backgroundColor = value > 0 ? '#60a5fa' : '#fb7185';
+                    customer.textContent = value;
+                    customer.classList.add('flex', 'items-center', 'justify-center', 'text-white', 'font-bold');
+
+                    customer.addEventListener('click', () => this.captureCustomer(customer));
+                    this.elements.gameBoard.appendChild(customer);
+                },
+
+                captureCustomer(customer) {
+                    const value = parseInt(customer.dataset.value);
+                    this.points += value;
+                    this.customersOnScreen--;
+                    
+                    // Animate customer to car trunk
+                    const carRect = this.elements.car.getBoundingClientRect();
+                    const boardRect = this.elements.gameBoard.getBoundingClientRect();
+                    customer.style.transition = 'all 0.5s ease-in-out';
+                    customer.style.left = `${carRect.left - boardRect.left + 30}px`;
+                    customer.style.top = `${carRect.top - boardRect.top + 10}px`;
+                    customer.style.opacity = '0';
+
+                    setTimeout(() => {
+                        customer.remove();
+                        this.updateUI();
+                        this.checkGameState();
+                    }, 500);
+                },
+
+                checkGameState() {
+                    if (this.points >= this.objective) {
+                        this.elements.trunk.classList.add('open');
+                        setTimeout(() => this.showLevelCompleteModal(), 1000);
+                    } else if (this.customersOnScreen === 0 && this.points < this.objective) {
+                         setTimeout(() => this.showGameOverModal(), 1000);
+                    }
+                },
+
+                clearCustomers() {
+                    this.elements.gameBoard.querySelectorAll('.customer').forEach(c => c.remove());
+                },
+                
+                showLevelCompleteModal() {
+                    this.elements.levelCompleteModal.classList.remove('hidden');
+                },
+                
+                showGameOverModal() {
+                    this.elements.gameOverModal.classList.remove('hidden');
+                },
+
+                nextLevel() {
+                    this.level++;
+                    this.objective = Math.floor(this.objective * 1.5);
+                    // Carry over some points, but not all
+                    this.points = Math.floor(this.points * 0.5) + 50; 
+                    this.investments = {};
+                    
+                    this.elements.levelCompleteModal.classList.add('hidden');
+                    this.elements.trunk.classList.remove('open');
+                    this.clearCustomers();
+                    this.updateUI();
+                    this.resetMarketingInputs();
+                },
+
+                restartGame() {
+                    this.level = 1;
+                    this.points = 50;
+                    this.objective = 100;
+                    this.investments = {};
+
+                    this.elements.gameOverModal.classList.add('hidden');
+                    this.clearCustomers();
+                    this.updateUI();
+                    this.resetMarketingInputs();
+                },
+
+                resetMarketingInputs() {
+                     this.elements.marketingChannelsContainer.querySelectorAll('input').forEach(input => {
+                        input.value = 0;
+                    });
+                    this.updateTotalInvestment();
+                }
+            };
+
+            game.init();
+        });
+    </script>
+</body>
+</html>

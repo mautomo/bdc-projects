@@ -6,7 +6,9 @@
     "dev": "next dev -p 3001",
     "build": "next build",
     "start": "next start -p 3001",
-    "lint": "next lint"
+    "lint": "next lint",
+    "build:docker": "docker build -t bdc-assessment .",
+    "deploy": "npm run build && npm run build:docker"
   },
   "dependencies": {
     "next": "14.0.4",

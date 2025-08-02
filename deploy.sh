@@ -102,8 +102,9 @@ sleep 30
 # Check if services are running
 if docker-compose ps | grep -q "Up"; then
     print_status "✅ Deployment successful!"
-    print_status "BDC Competitive: http://competitive.your-domain.com"
-    print_status "BDC Assessment: http://assessment.your-domain.com"
+    print_status "BDC Dashboard (Main App): https://bdcapp.vandoko.com"
+    print_status "BDC Competitive: https://competitive.vandoko.com"
+    print_status "BDC Assessment: https://assessment.vandoko.com"
 else
     print_error "❌ Deployment failed. Check docker-compose logs."
     docker-compose logs
@@ -113,7 +114,7 @@ fi
 # Set up SSL certificates (Let's Encrypt)
 if command -v certbot &> /dev/null; then
     print_status "Setting up SSL certificates..."
-    sudo certbot --nginx -d competitive.your-domain.com -d assessment.your-domain.com --non-interactive --agree-tos --email your-email@domain.com
+    sudo certbot --nginx -d bdcapp.vandoko.com -d competitive.vandoko.com -d assessment.vandoko.com -d vandoko.com -d www.vandoko.com --non-interactive --agree-tos --email mdonovan@vandoko.ai
 else
     print_warning "Certbot not found. Install it manually for SSL certificates."
 fi
