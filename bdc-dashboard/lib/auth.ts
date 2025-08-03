@@ -11,7 +11,6 @@ import { createAuditLog } from "@/lib/audit"
 const ALLOWED_DOMAINS = ["vandoko.ai", "strolid.com"]
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,

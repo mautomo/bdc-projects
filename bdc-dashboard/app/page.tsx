@@ -1,6 +1,7 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { DashboardHeader } from '@/components/dashboard/header'
@@ -16,9 +17,23 @@ import {
 } from 'lucide-react'
 
 export default function DashboardPage() {
-  const { data: session, status } = useSession()
+  const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
-  if (status === 'loading') {
+  useEffect(() => {
+    const authStatus = localStorage.getItem('adminAuth')
+    const userData = localStorage.getItem('adminUser')
+    
+    if (authStatus === 'true' && userData) {
+      setUser(JSON.parse(userData))
+    } else {
+      router.push('/simple-login')
+    }
+    setLoading(false)
+  }, [router])
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
@@ -33,7 +48,7 @@ export default function DashboardPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">
-            Welcome back, {session?.user?.name?.split(' ')[0]}
+            Welcome back, {user?.name?.split(' ')[0]}
           </h1>
           <p className="text-muted-foreground text-lg">
             Access your Business Development Center resources
