@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BDC Dashboard - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">BDC Dashboard</h1>
+            <p class="text-gray-600">Sign in to your account</p>
+        </div>
+        
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input type="email" id="email" name="email" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="name@example.com">
+            </div>
+            
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <input type="password" id="password" name="password" required
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                       placeholder="Password">
+            </div>
+            
+            <div id="error" class="hidden text-red-600 text-sm text-center"></div>
+            
+            <button type="submit" id="submitBtn"
+                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                Sign In
+            </button>
+        </form>
+        
+        <p class="mt-4 text-center text-sm text-gray-600">
+            Admin access only. Contact support for assistance.
+        </p>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Show loading state
+            submitBtn.textContent = 'Signing in...';
+            submitBtn.disabled = true;
+            errorDiv.classList.add('hidden');
+            
+            // Check credentials
+            if (email === 'michael.donovan@strolid.com' && password === 'AdminPass123') {
+                // Set auth in localStorage
+                localStorage.setItem('adminAuth', 'true');
+                localStorage.setItem('adminUser', JSON.stringify({
+                    email: 'michael.donovan@strolid.com',
+                    name: 'Michael Donovan',
+                    role: 'SUPER_ADMIN'
+                }));
+                
+                // Redirect to dashboard
+                window.location.href = '/';
+            } else {
+                // Show error
+                errorDiv.textContent = 'Invalid credentials';
+                errorDiv.classList.remove('hidden');
+                
+                // Reset button
+                submitBtn.textContent = 'Sign In';
+                submitBtn.disabled = false;
+            }
+        });
+        
+        // Check if already logged in
+        if (localStorage.getItem('adminAuth') === 'true') {
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
