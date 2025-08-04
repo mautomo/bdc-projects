@@ -7,6 +7,7 @@ export function middleware(request: NextRequest) {
   // Allow access to login page and static assets
   if (
     pathname.startsWith('/simple-login') ||
+    pathname.startsWith('/working-login') ||
     pathname.startsWith('/login.html') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
