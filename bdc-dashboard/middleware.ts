@@ -2,23 +2,8 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
-  // Allow access to login page and static assets
-  if (
-    pathname.startsWith('/simple-login') ||
-    pathname.startsWith('/working-login') ||
-    pathname.startsWith('/login.html') ||
-    pathname.startsWith('/emergency-login.html') ||
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/favicon.ico')
-  ) {
-    return NextResponse.next()
-  }
-
-  // For all other routes, redirect to simple login
-  return NextResponse.redirect(new URL('/simple-login', request.url))
+  // Allow all routes - authentication handled client-side
+  return NextResponse.next()
 }
 
 export const config = {

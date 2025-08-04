@@ -68,8 +68,10 @@
                     role: 'SUPER_ADMIN'
                 }));
                 
-                // Redirect to dashboard
-                window.location.href = '/';
+                // Redirect to dashboard with a slight delay to ensure localStorage is set
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 100);
             } else {
                 // Show error
                 errorDiv.textContent = 'Invalid credentials';
