@@ -5,10 +5,7 @@ const nextConfig = {
   poweredByHeader: false, // Security: Hide X-Powered-By header
   compress: true,
   trailingSlash: false,
-  // Skip build-time static generation for problematic pages
-  experimental: {
-    skipTrailingSlashRedirect: true,
-  },
+  skipTrailingSlashRedirect: true,
   
   // Security headers
   async headers() {
