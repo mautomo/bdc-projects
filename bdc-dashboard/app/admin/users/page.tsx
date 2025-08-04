@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -70,7 +70,8 @@ interface Invitation {
 }
 
 export default function UserManagementPage() {
-  const { data: session } = useSession()
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
   const [users, setUsers] = useState<User[]>([])
   const [invitations, setInvitations] = useState<Invitation[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -86,14 +87,26 @@ export default function UserManagementPage() {
   const [inviting, setInviting] = useState(false)
 
   // Check if user is admin
-  const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN'
+  const isAdmin = user?.role === 'SUPER_ADMIN'
 
   useEffect(() => {
-    if (isAdmin) {
+    const authStatus = localStorage.getItem('adminAuth')
+    const userData = localStorage.getItem('adminUser')
+    
+    if (authStatus === 'true' && userData) {
+      setUser(JSON.parse(userData))
+    } else {
+      router.push('/simple-login')
+      return
+    }
+  }, [router])
+
+  useEffect(() => {
+    if (user && isAdmin) {
       fetchUsers()
       fetchInvitations()
     }
-  }, [isAdmin])
+  }, [user, isAdmin])
 
   const fetchUsers = async () => {
     try {
@@ -273,7 +286,7 @@ export default function UserManagementPage() {
                     <SelectContent>
                       <SelectItem value="USER">User</SelectItem>
                       <SelectItem value="ADMIN">Admin</SelectItem>
-                      {session?.user?.role === 'SUPER_ADMIN' && (
+                      {user?.role === 'SUPER_ADMIN' && (
                         <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
                       )}
                     </SelectContent>
@@ -357,7 +370,7 @@ export default function UserManagementPage() {
                       {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}
                     </TableCell>
                     <TableCell>
-                      {user.id !== session?.user?.id && (
+                      {user.email !== 'michael.donovan@strolid.com' && (
                         <Button
                           variant="outline"
                           size="sm"

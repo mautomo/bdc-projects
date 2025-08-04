@@ -1,6 +1,7 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -15,7 +16,23 @@ import { Settings, LogOut, User } from 'lucide-react'
 import Link from 'next/link'
 
 export function DashboardHeader() {
-  const { data: session } = useSession()
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const authStatus = localStorage.getItem('adminAuth')
+    const userData = localStorage.getItem('adminUser')
+    
+    if (authStatus === 'true' && userData) {
+      setUser(JSON.parse(userData))
+    }
+  }, [])
+
+  const handleSignOut = () => {
+    localStorage.removeItem('adminAuth')
+    localStorage.removeItem('adminUser')
+    router.push('/simple-login')
+  }
 
   return (
     <header className="border-b bg-white shadow-sm">
@@ -62,9 +79,9 @@ export function DashboardHeader() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={session?.user?.image || ''} alt={session?.user?.name || ''} />
+                    <AvatarImage src="" alt={user?.name || ''} />
                     <AvatarFallback>
-                      {session?.user?.name?.charAt(0) || 'U'}
+                      {user?.name?.charAt(0) || 'M'}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -73,10 +90,10 @@ export function DashboardHeader() {
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium leading-none">
-                      {session?.user?.name}
+                      {user?.name}
                     </p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      {session?.user?.email}
+                      {user?.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>
@@ -89,7 +106,7 @@ export function DashboardHeader() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => signOut({ callbackUrl: '/auth/signin' })}
+                  onClick={handleSignOut}
                   className="text-red-600"
                 >
                   <LogOut className="mr-2 h-4 w-4" />

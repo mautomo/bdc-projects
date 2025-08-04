@@ -1,6 +1,7 @@
 'use client'
 
-import { useSession } from 'next-auth/react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { DashboardHeader } from '@/components/dashboard/header'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -23,7 +24,23 @@ import {
 } from 'lucide-react'
 
 export default function SettingsPage() {
-  const { data: session } = useSession()
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const authStatus = localStorage.getItem('adminAuth')
+    const userData = localStorage.getItem('adminUser')
+    
+    if (authStatus === 'true' && userData) {
+      setUser(JSON.parse(userData))
+    } else {
+      router.push('/simple-login')
+    }
+  }, [router])
+
+  if (!user) {
+    return <div>Loading...</div>
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,14 +78,14 @@ export default function SettingsPage() {
               <CardContent className="space-y-6">
                 <div className="flex items-center space-x-4">
                   <Avatar className="h-20 w-20">
-                    <AvatarImage src={session?.user?.image || ''} alt={session?.user?.name || ''} />
+                    <AvatarImage src="" alt={user?.name || ''} />
                     <AvatarFallback className="text-lg">
-                      {session?.user?.name?.charAt(0) || 'U'}
+                      {user?.name?.charAt(0) || 'M'}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="text-lg font-medium">{session?.user?.name}</h3>
-                    <p className="text-muted-foreground">{session?.user?.email}</p>
+                    <h3 className="text-lg font-medium">{user?.name}</h3>
+                    <p className="text-muted-foreground">{user?.email}</p>
                     <Badge className="mt-1">Vandoko Team</Badge>
                   </div>
                 </div>
@@ -80,12 +97,12 @@ export default function SettingsPage() {
                     <Label htmlFor="name">Full Name</Label>
                     <Input 
                       id="name" 
-                      value={session?.user?.name || ''} 
+                      value={user?.name || ''} 
                       disabled
                       className="bg-muted"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Managed by Google SSO
+                      Static admin account
                     </p>
                   </div>
                   
@@ -93,12 +110,12 @@ export default function SettingsPage() {
                     <Label htmlFor="email">Email Address</Label>
                     <Input 
                       id="email" 
-                      value={session?.user?.email || ''} 
+                      value={user?.email || ''} 
                       disabled
                       className="bg-muted"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Managed by Google SSO
+                      Static admin account
                     </p>
                   </div>
                 </div>
@@ -215,7 +232,7 @@ export default function SettingsPage() {
                       <div>
                         <p className="font-medium">Email Verification</p>
                         <p className="text-sm text-muted-foreground">
-                          {session?.user?.email} is verified
+                          {user?.email} is verified
                         </p>
                       </div>
                     </div>
